@@ -1,0 +1,1 @@
+ C:\\Users\\kubaw\\StudioProjects\\Shopper\\.dart_tool\\flutter_build\\9e6cc4e5b1b60d0fe0d07d245de62390\\native_assets.yaml: 
