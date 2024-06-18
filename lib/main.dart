@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'pages/login_page.dart';
+import 'pages/login_register_pages/login_page.dart';
 import 'pages/home_page.dart';
-import 'pages/register_page.dart';
+import 'pages/login_register_pages/register_page.dart';
 import './pallete.dart';
 
 void main() async {
