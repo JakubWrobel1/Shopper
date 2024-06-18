@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import './shopping_list_pages/shopping_list_page.dart';
+import './admin_pages/admin_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,6 +12,24 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _listNameController = TextEditingController();
+  bool isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminRole();
+  }
+
+  void _checkAdminRole() async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      setState(() {
+        isAdmin = userDoc['role'] == 'admin';
+      });
+    }
+  }
 
   void createShoppingList(String listName) async {
     User? user = _auth.currentUser;
@@ -28,6 +47,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void deleteShoppingList(String listId) async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection('shopping_lists')
+          .doc(user.uid)
+          .collection('user_lists')
+          .doc(listId)
+          .delete();
+
+      setState(() {});
+    } else {
+      print("User is not logged in.");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     User? user = _auth.currentUser;
@@ -36,6 +72,18 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Home'),
         actions: [
+          if (isAdmin)
+            IconButton(
+              icon: Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdminPage(),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
@@ -91,6 +139,12 @@ class _HomePageState extends State<HomePage> {
                           var list = lists[index];
                           return ListTile(
                             title: Text(list['name']),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                deleteShoppingList(list.id);
+                              },
+                            ),
                             onTap: () {
                               Navigator.push(
                                 context,
