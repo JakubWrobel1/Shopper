@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import './shopping_list_pages/shopping_list_page.dart';
+import './admin_pages/admin_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -12,6 +14,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _listNameController = TextEditingController();
+  bool isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminRole();
+  }
+
+  void _checkAdminRole() async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      setState(() {
+        isAdmin = userDoc['role'] == 'admin';
+      });
+    }
+  }
 
   void createShoppingList(String listName) async {
     User? user = _auth.currentUser;
@@ -55,8 +76,7 @@ class _HomePageState extends State<HomePage> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Confirm Deletion'),
-              content:
-                  Text('Are you sure you want to delete the list "$listName"?'),
+              content: Text('Are you sure you want to delete the list "$listName"?'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -85,6 +105,18 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdminPage(),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -95,8 +127,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: user == null
-          ? const Center(
-              child: Text('Please log in to see your shopping lists'))
+          ? const Center(child: Text('Please log in to see your shopping lists'))
           : Column(
               children: [
                 Padding(
@@ -107,8 +138,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
                           controller: _listNameController,
-                          decoration:
-                              const InputDecoration(labelText: 'New List Name'),
+                          decoration: const InputDecoration(labelText: 'New List Name'),
                         ),
                       ),
                       ElevatedButton(
@@ -136,8 +166,7 @@ class _HomePageState extends State<HomePage> {
                       var lists = snapshot.data!.docs;
 
                       if (lists.isEmpty) {
-                        return const Center(
-                            child: Text('No shopping lists available.'));
+                        return const Center(child: Text('No shopping lists available.'));
                       }
 
                       return ListView.builder(
@@ -159,8 +188,7 @@ class _HomePageState extends State<HomePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      ShoppingListPage(listId),
+                                  builder: (context) => ShoppingListPage(listId),
                                 ),
                               );
                             },
