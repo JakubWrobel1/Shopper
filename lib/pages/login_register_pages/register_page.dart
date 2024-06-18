@@ -56,15 +56,15 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Center(
           child: Column(
             children: [
-              Image.asset('assets/images/signin_balls.png'),
+              Image.asset('assets/images/signin_balls.png', scale: 25),
               const Text(
                 'Register.',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 50,
+                  fontSize: 40,
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 25),
               const SocialButton(
                   iconPath: 'assets/svgs/g_logo.svg',
                   label: 'Continue with Google'),
@@ -125,7 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       text: 'Register',
                       onPressed: _register,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/login');

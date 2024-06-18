@@ -45,15 +45,15 @@ class _LoginPageState extends State<LoginPage> {
         child: Center(
           child: Column(
             children: [
-              Image.asset('assets/images/signin_balls.png'),
+              Image.asset('assets/images/signin_balls.png', scale: 25),
               const Text(
                 'Login.',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 50,
+                  fontSize: 40,
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 25),
               const SocialButton(
                   iconPath: 'assets/svgs/g_logo.svg',
                   label: 'Continue with Google'),

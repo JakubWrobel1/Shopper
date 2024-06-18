@@ -16,10 +16,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   final TextEditingController _itemNameController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
 
-  void addItemToShoppingList(String itemName, int quantity) async {
+  void addItemToShoppingList(String itemName, {int quantity = 1}) async {
     User? user = _auth.currentUser;
 
-    if (user != null) {
+    if (user != null && itemName.isNotEmpty) {
       FirebaseFirestore.instance
           .collection('shopping_lists')
           .doc(user.uid)
@@ -29,9 +29,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           .add({
         'name': itemName,
         'quantity': quantity,
+        'isChecked': false,
       });
     } else {
-      print("User is not logged in.");
+      print("User is not logged in or item name is empty.");
     }
   }
 
@@ -47,6 +48,25 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           .collection('items')
           .doc(itemId)
           .delete();
+    } else {
+      print("User is not logged in.");
+    }
+  }
+
+  void toggleItemChecked(String itemId, bool isChecked) async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      FirebaseFirestore.instance
+          .collection('shopping_lists')
+          .doc(user.uid)
+          .collection('user_lists')
+          .doc(widget.listId)
+          .collection('items')
+          .doc(itemId)
+          .update({
+        'isChecked': !isChecked,
+      });
     } else {
       print("User is not logged in.");
     }
@@ -79,12 +99,21 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          addItemToShoppingList(
-                            _itemNameController.text,
-                            int.parse(_quantityController.text),
-                          );
-                          _itemNameController.clear();
-                          _quantityController.clear();
+                          if (_itemNameController.text.isNotEmpty) {
+                            addItemToShoppingList(
+                              _itemNameController.text,
+                              quantity:
+                                  int.tryParse(_quantityController.text) ?? 1,
+                            );
+                            _itemNameController.clear();
+                            _quantityController.clear();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Item name cannot be empty'),
+                              ),
+                            );
+                          }
                         },
                         child: Text('Add Item'),
                       ),
@@ -118,16 +147,18 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                           var itemName = item['name'];
                           var quantity = item['quantity'];
                           var itemId = item.id;
+                          var isChecked = item['isChecked'];
 
-                          return ListTile(
-                            title: Text(itemName),
-                            subtitle: Text('Quantity: $quantity'),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                deleteItemFromShoppingList(itemId);
-                              },
-                            ),
+                          return ShoppingListItem(
+                            itemName: itemName,
+                            quantity: quantity,
+                            isChecked: isChecked,
+                            onCheckedChanged: (bool newValue) {
+                              toggleItemChecked(itemId, isChecked);
+                            },
+                            onDelete: () {
+                              deleteItemFromShoppingList(itemId);
+                            },
                           );
                         },
                       );
@@ -137,5 +168,114 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
               ],
             ),
     );
+  }
+}
+
+class ShoppingListItem extends StatefulWidget {
+  final String itemName;
+  final int quantity;
+  final bool isChecked;
+  final ValueChanged<bool> onCheckedChanged;
+  final VoidCallback onDelete;
+
+  ShoppingListItem({
+    required this.itemName,
+    required this.quantity,
+    required this.isChecked,
+    required this.onCheckedChanged,
+    required this.onDelete,
+  });
+
+  @override
+  _ShoppingListItemState createState() => _ShoppingListItemState();
+}
+
+class _ShoppingListItemState extends State<ShoppingListItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+    if (widget.isChecked) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ShoppingListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isChecked != oldWidget.isChecked) {
+      if (widget.isChecked) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        widget.onCheckedChanged(!widget.isChecked);
+      },
+      child: ListTile(
+        title: Stack(
+          children: [
+            Text(widget.itemName),
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: LinePainter(_animation.value),
+                  child: Container(),
+                );
+              },
+            ),
+          ],
+        ),
+        subtitle: Text('Quantity: ${widget.quantity}'),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: widget.onDelete,
+        ),
+      ),
+    );
+  }
+}
+
+class LinePainter extends CustomPainter {
+  final double progress;
+
+  LinePainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 2.0;
+
+    final y = size.height / 2;
+    final x2 = size.width * progress;
+
+    canvas.drawLine(const Offset(0, 13.0), Offset(x2, 13.0), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
   }
 }
