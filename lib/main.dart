@@ -1,31 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'pages/login_page.dart';
+import 'pages/login_register_pages/login_page.dart';
 import 'pages/home_page.dart';
-import 'pages/register_page.dart'; // Importuj stronę rejestracji
+import 'pages/login_register_pages/register_page.dart';
+import './pallete.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Firebase Auth',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Pallete.backgroundColor,
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (context) => LoginPage(),
+        '/login': (context) => const LoginPage(),
         '/home': (context) => HomePage(),
-        '/register': (context) => RegisterPage(), // Dodaj trasę do rejestracji
+        '/register': (context) => const RegisterPage(),
       },
     );
   }
