@@ -6,6 +6,7 @@ import 'package:shopper/pallete.dart';
 import 'package:shopper/widgets/gradient_button.dart';
 import 'package:shopper/widgets/login_field.dart';
 import 'package:shopper/widgets/social_button.dart';
+import 'package:shopper/pages/login_register_pages/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -57,35 +58,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _loginWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return;
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
-
-      if (userCredential.user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      debugPrint('Error signing in with Google: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to sign in with Google'),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,11 +75,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 25),
               SocialButton(
-                iconPath: 'assets/svgs/g_logo.svg',
-                label: 'Continue with Google',
-                onPressed:
-                    _loginWithGoogle, // Przekaż funkcję logowania przez Google
-              ),
+                  iconPath: 'assets/svgs/g_logo.svg',
+                  label: 'Continue with Google',
+                  onPressed: () {
+                    loginWithGoogle(
+                      auth: _auth,
+                      context: context,
+                      googleSignIn: _googleSignIn,
+                    );
+                  } // Przekaż funkcję logowania przez Google
+                  ),
               const SizedBox(height: 15),
               const Text(
                 'or',
