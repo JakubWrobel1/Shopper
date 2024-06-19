@@ -6,11 +6,13 @@ class SocialButton extends StatelessWidget {
   final String iconPath;
   final String label;
   final double horizontalPadding;
+  final VoidCallback onPressed;
 
   const SocialButton({
     Key? key,
     required this.iconPath,
     required this.label,
+    required this.onPressed, // Dodano wymaganą funkcję onPressed
     this.horizontalPadding = 16.0, // Zmniejszony padding dla pełnej szerokości
   }) : super(key: key);
 
@@ -19,7 +21,7 @@ class SocialButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: TextButton.icon(
-        onPressed: () {},
+        onPressed: onPressed, // Wywołanie przekazanej funkcji onPressed
         icon: SvgPicture.asset(
           iconPath,
           width: 25,

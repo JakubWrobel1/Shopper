@@ -65,6 +65,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '832084020926',
     projectId: 'shopper-fcf73',
     storageBucket: 'shopper-fcf73.appspot.com',
+    iosClientId: '832084020926-ohj57hmp6pkudrqvdt77jacfld7g6ckm.apps.googleusercontent.com',
     iosBundleId: 'com.example.shopper',
   );
 
@@ -74,6 +75,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '832084020926',
     projectId: 'shopper-fcf73',
     storageBucket: 'shopper-fcf73.appspot.com',
+    iosClientId: '832084020926-ohj57hmp6pkudrqvdt77jacfld7g6ckm.apps.googleusercontent.com',
     iosBundleId: 'com.example.shopper',
   );
 
@@ -86,4 +88,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'shopper-fcf73.appspot.com',
     measurementId: 'G-5X1N4B76LF',
   );
+
 }

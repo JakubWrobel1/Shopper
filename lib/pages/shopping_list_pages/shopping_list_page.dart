@@ -72,6 +72,27 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
     }
   }
 
+  void editItemInShoppingList(
+      String itemId, String newName, int newQuantity) async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      FirebaseFirestore.instance
+          .collection('shopping_lists')
+          .doc(user.uid)
+          .collection('user_lists')
+          .doc(widget.listId)
+          .collection('items')
+          .doc(itemId)
+          .update({
+        'name': newName,
+        'quantity': newQuantity,
+      });
+    } else {
+      print("User is not logged in.");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     User? user = _auth.currentUser;
@@ -153,14 +174,19 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                           var isChecked = item['isChecked'];
 
                           return ShoppingListItem(
-                            itemName: itemName,
-                            quantity: quantity,
+                            itemId: itemId,
+                            initialItemName: itemName,
+                            initialQuantity: quantity,
                             isChecked: isChecked,
                             onCheckedChanged: (bool newValue) {
                               toggleItemChecked(itemId, isChecked);
                             },
                             onDelete: () {
                               deleteItemFromShoppingList(itemId);
+                            },
+                            onEdit: (String newName, int newQuantity) {
+                              editItemInShoppingList(
+                                  itemId, newName, newQuantity);
                             },
                           );
                         },
@@ -175,58 +201,54 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 }
 
 class ShoppingListItem extends StatefulWidget {
-  final String itemName;
-  final int quantity;
+  final String itemId;
+  final String initialItemName;
+  final int initialQuantity;
   final bool isChecked;
   final ValueChanged<bool> onCheckedChanged;
   final VoidCallback onDelete;
+  final Function(String newName, int newQuantity) onEdit;
 
   ShoppingListItem({
-    required this.itemName,
-    required this.quantity,
+    required this.itemId,
+    required this.initialItemName,
+    required this.initialQuantity,
     required this.isChecked,
     required this.onCheckedChanged,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
   _ShoppingListItemState createState() => _ShoppingListItemState();
 }
 
-class _ShoppingListItemState extends State<ShoppingListItem>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class _ShoppingListItemState extends State<ShoppingListItem> {
+  late TextEditingController _itemNameController;
+  late TextEditingController _quantityController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
-    if (widget.isChecked) {
-      _controller.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(ShoppingListItem oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isChecked != oldWidget.isChecked) {
-      if (widget.isChecked) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    }
+    _itemNameController = TextEditingController(text: widget.initialItemName);
+    _quantityController =
+        TextEditingController(text: widget.initialQuantity.toString());
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _itemNameController.dispose();
+    _quantityController.dispose();
     super.dispose();
+  }
+
+  void _saveChanges() {
+    String newName = _itemNameController.text.trim();
+    int newQuantity = int.tryParse(_quantityController.text.trim()) ?? 1;
+
+    widget.onEdit(newName, newQuantity);
+
+    Navigator.of(context).pop(); // Powrót do poprzedniego ekranu
   }
 
   @override
@@ -238,27 +260,55 @@ class _ShoppingListItemState extends State<ShoppingListItem>
       child: ListTile(
         title: Stack(
           children: [
-            Text(widget.itemName),
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: LinePainter(_animation.value),
-                  child: Container(),
+            Text(widget.initialItemName),
+          ],
+        ),
+        subtitle: Text('Quantity: ${widget.initialQuantity}'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Edit Item'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: _itemNameController,
+                          decoration: InputDecoration(labelText: 'Item Name'),
+                        ),
+                        TextField(
+                          controller: _quantityController,
+                          decoration: InputDecoration(labelText: 'Quantity'),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: _saveChanges,
+                        child: Text('Save'),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: widget.onDelete,
+            ),
           ],
-        ),
-        subtitle: Text('Quantity: ${widget.quantity}'),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: widget.onDelete,
         ),
       ),
     );
   }
 }
+
 
 class LinePainter extends CustomPainter {
   final double progress;
@@ -281,3 +331,4 @@ class LinePainter extends CustomPainter {
     return true;
   }
 }
+
