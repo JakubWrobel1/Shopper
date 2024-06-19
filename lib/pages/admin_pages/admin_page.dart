@@ -42,6 +42,8 @@ class _AdminPageState extends State<AdminPage> {
 
     if (adminUser != null) {
       await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+      await _auth.currentUser!
+          .delete(); // Usuń użytkownika z Firebase Authentication
       setState(() {});
     } else {
       print("Admin user is not logged in.");
@@ -126,7 +128,9 @@ class _AdminPageState extends State<AdminPage> {
                   return Center(child: CircularProgressIndicator());
                 }
 
-                var users = snapshot.data!.docs;
+                var users = snapshot.data!.docs
+                    .where((user) => user['role'] != 'admin')
+                    .toList(); // Filtruj administratorów
 
                 return ListView.builder(
                   itemCount: users.length,

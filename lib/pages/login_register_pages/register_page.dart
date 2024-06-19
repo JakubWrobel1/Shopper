@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:shopper/pallete.dart';
+import 'package:shopper/widgets/gradient_button.dart';
+import 'package:shopper/widgets/login_field.dart';
+import 'package:shopper/widgets/social_button.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -11,57 +15,134 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String _email = '';
+  String _password = '';
+  String _name = '';
 
-  void registerUser(String email, String password) async {
-    try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+  void _register() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      try {
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+          email: _email,
+          password: _password,
+        );
 
-      User? user = userCredential.user;
-
-      if (user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'email': email,
-          'role': 'user', // Ustawianie roli użytkownika
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'email': _email,
+          'name': _name,
+          'createdAt': FieldValue.serverTimestamp(),
         });
-      }
 
-      // Przekierowanie do strony głównej lub innej strony
-    } catch (e) {
-      print("Error: $e");
+        Navigator.pushReplacementNamed(context, '/home');
+      } catch (e) {
+        debugPrint(e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to register with Email & Password'),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Register'),
-      ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            ElevatedButton(
-              onPressed: () {
-                registerUser(_emailController.text, _passwordController.text);
-              },
-              child: Text('Register'),
-            ),
-          ],
+        child: Center(
+          child: Column(
+            children: [
+              Image.asset('assets/images/signin_balls.png', scale: 25),
+              const Text(
+                'Register.',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 40,
+                ),
+              ),
+              const SizedBox(height: 25),
+              const SocialButton(
+                  iconPath: 'assets/svgs/g_logo.svg',
+                  label: 'Continue with Google'),
+              const SizedBox(height: 15),
+              const Text(
+                'or',
+                style: TextStyle(
+                  fontSize: 17,
+                ),
+              ),
+              const SizedBox(height: 15),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    LoginField(
+                      hintText: 'Name',
+                      onSaved: (value) {
+                        _name = value!;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 15),
+                    LoginField(
+                      hintText: 'Email',
+                      keyboardType: TextInputType.emailAddress,
+                      onSaved: (value) {
+                        _email = value!;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 15),
+                    LoginField(
+                      hintText: 'Password',
+                      obscureText: true,
+                      onSaved: (value) {
+                        _password = value!;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    GradientButton(
+                      text: 'Register',
+                      onPressed: _register,
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/login');
+                      },
+                      child: const Text(
+                        'Already have an account? Log in',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Pallete.gradient2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

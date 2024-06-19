@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shopper/pallete.dart';
 import 'package:shopper/widgets/gradient_button.dart';
 import 'package:shopper/widgets/login_field.dart';
 import 'package:shopper/widgets/social_button.dart';
+import '../admin_pages/admin_page.dart'; // Import AdminPage
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,11 +24,26 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-        await _auth.signInWithEmailAndPassword(
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _email,
           password: _password,
         );
-        Navigator.pushReplacementNamed(context, '/home');
+
+        User? user = userCredential.user;
+        if (user != null) {
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+          if (userDoc['role'] == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminPage()),
+            );
+          } else {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        }
       } catch (e) {
         debugPrint(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
