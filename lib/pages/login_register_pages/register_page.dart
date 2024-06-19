@@ -20,6 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String _email = '';
   String _password = '';
   String _name = '';
+  bool _passwordVisible = false; // Zmienna do kontrolowania widoczności hasła
 
   void _register() async {
     if (_formKey.currentState!.validate()) {
@@ -34,6 +35,7 @@ class _RegisterPageState extends State<RegisterPage> {
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': _email,
           'name': _name,
+          'role': 'user', // Domyślna rola
           'createdAt': FieldValue.serverTimestamp(),
         });
 
@@ -109,7 +111,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 15),
                     LoginField(
                       hintText: 'Password',
-                      obscureText: true,
+                      obscureText: !_passwordVisible,
                       onSaved: (value) {
                         _password = value!;
                       },
@@ -119,6 +121,18 @@ class _RegisterPageState extends State<RegisterPage> {
                         }
                         return null;
                       },
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                     ),
                     const SizedBox(height: 20),
                     GradientButton(
