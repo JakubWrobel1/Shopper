@@ -5,7 +5,7 @@ import './shopping_list_pages/shopping_list_page.dart';
 import './admin_pages/admin_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -149,7 +149,8 @@ class _HomePageState extends State<HomePage> {
               ),
               TextField(
                 controller: editDescriptionController,
-                decoration: const InputDecoration(labelText: 'New Description'),
+                decoration: const InputDecoration(
+                    labelText: 'New Description'),
               ),
             ],
           ),
@@ -180,7 +181,11 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        automaticallyImplyLeading: false, // Usunięcie przycisku powrotu
+        title: Image.asset(
+          'assets/images/logo.png', // Ścieżka do logo
+          height: 60, // Ustawienie wysokości logo
+        ),
         actions: [
           if (isAdmin)
             IconButton(
@@ -233,11 +238,9 @@ class _HomePageState extends State<HomePage> {
                         onPressed: () {
                           createShoppingList(
                               _listNameController.text,
-                              _listDescriptionController
-                                  .text); // Dodanie opisu do listy
+                              _listDescriptionController.text); // Dodanie opisu do listy
                           _listNameController.clear();
-                          _listDescriptionController
-                              .clear(); // Wyczyszczenie pola opisu po dodaniu listy
+                          _listDescriptionController.clear(); // Wyczyszczenie pola opisu po dodaniu listy
                         },
                         child: const Text('Create New List'),
                       ),

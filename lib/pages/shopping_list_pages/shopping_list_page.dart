@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class ShoppingListPage extends StatefulWidget {
   final String listId;
 
-  ShoppingListPage(this.listId);
+  const ShoppingListPage(this.listId, {super.key});
 
   @override
   _ShoppingListPageState createState() => _ShoppingListPageState();
@@ -32,7 +32,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
         'isChecked': false,
       });
     } else {
-      print("User is not logged in or item name is empty.");
+      debugPrint("User is not logged in or item name is empty.");
     }
   }
 
@@ -49,7 +49,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           .doc(itemId)
           .delete();
     } else {
-      print("User is not logged in.");
+      debugPrint("User is not logged in.");
     }
   }
 
@@ -68,7 +68,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
         'isChecked': !isChecked,
       });
     } else {
-      print("User is not logged in.");
+      debugPrint("User is not logged in.");
     }
   }
 
@@ -99,10 +99,10 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Shopping List'),
+        title: const Text('Shopping List'),
       ),
       body: user == null
-          ? Center(child: Text('Please log in to see your shopping list'))
+          ? const Center(child: Text('Please log in to see your shopping list'))
           : Column(
               children: [
                 Padding(
@@ -111,11 +111,13 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     children: [
                       TextField(
                         controller: _itemNameController,
-                        decoration: InputDecoration(labelText: 'Item Name'),
+                        decoration:
+                            const InputDecoration(labelText: 'Item Name'),
                       ),
                       TextField(
                         controller: _quantityController,
-                        decoration: InputDecoration(labelText: 'Quantity'),
+                        decoration:
+                            const InputDecoration(labelText: 'Quantity'),
                         keyboardType: TextInputType.number,
                       ),
                       ElevatedButton(
@@ -130,13 +132,13 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                             _quantityController.clear();
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                 content: Text('Item name cannot be empty'),
                               ),
                             );
                           }
                         },
-                        child: Text('Add Item'),
+                        child: const Text('Add Item'),
                       ),
                     ],
                   ),
@@ -145,20 +147,21 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('shopping_lists')
-                        .doc(user!.uid)
+                        .doc(user.uid)
                         .collection('user_lists')
                         .doc(widget.listId)
                         .collection('items')
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) {
-                        return Center(child: CircularProgressIndicator());
+                        return const Center(child: CircularProgressIndicator());
                       }
 
                       var items = snapshot.data!.docs;
 
                       if (items.isEmpty) {
-                        return Center(child: Text('No items in this list.'));
+                        return const Center(
+                            child: Text('No items in this list.'));
                       }
 
                       return ListView.builder(
@@ -305,3 +308,27 @@ class _ShoppingListItemState extends State<ShoppingListItem> {
     );
   }
 }
+
+
+class LinePainter extends CustomPainter {
+  final double progress;
+
+  LinePainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 2.0;
+
+    final x2 = size.width * progress;
+
+    canvas.drawLine(const Offset(0, 13.0), Offset(x2, 13.0), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+}
+

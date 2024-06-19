@@ -12,8 +12,11 @@ class _AdminPageState extends State<AdminPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  bool _passwordVisible = false; // Zmienna do kontrolowania widoczności hasła
+  String _role = 'user'; // Default role
 
-  void registerUser(String email, String password, String name) async {
+  void registerUser(
+      String email, String password, String name, String role) async {
     try {
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
@@ -27,7 +30,7 @@ class _AdminPageState extends State<AdminPage> {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'email': email,
           'name': name,
-          'role': 'user',
+          'role': role,
         });
       }
 
@@ -37,19 +40,7 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
-  void deleteUser(String userId) async {
-    User? adminUser = _auth.currentUser;
-
-    if (adminUser != null) {
-      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
-      setState(() {});
-    } else {
-      print("Admin user is not logged in.");
-    }
-  }
-
-  void updateUser(
-      String userId, String email, String name, String password) async {
+  void updateUser(String userId, String name) async {
     User? adminUser = _auth.currentUser;
 
     if (adminUser != null) {
@@ -59,16 +50,8 @@ class _AdminPageState extends State<AdminPage> {
             .collection('users')
             .doc(userId)
             .update({
-          'email': email,
           'name': name,
         });
-
-        // Aktualizacja danych użytkownika w Firebase Authentication
-        User? user = await _auth.currentUser;
-        if (user != null) {
-          await user.updateEmail(email);
-          await user.updatePassword(password);
-        }
 
         setState(() {});
       } catch (e) {
@@ -97,20 +80,51 @@ class _AdminPageState extends State<AdminPage> {
                 ),
                 TextField(
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: 'Password'),
-                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: !_passwordVisible,
                 ),
                 TextField(
                   controller: _nameController,
                   decoration: InputDecoration(labelText: 'Name'),
                 ),
+                DropdownButton<String>(
+                  value: _role,
+                  items: <String>['user', 'admin'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _role = newValue!;
+                    });
+                  },
+                ),
                 ElevatedButton(
                   onPressed: () {
                     registerUser(_emailController.text,
-                        _passwordController.text, _nameController.text);
+                        _passwordController.text, _nameController.text, _role);
                     _emailController.clear();
                     _passwordController.clear();
                     _nameController.clear();
+                    setState(() {
+                      _role = 'user'; // Reset role to default
+                    });
                   },
                   child: Text('Register New User'),
                 ),
@@ -133,70 +147,36 @@ class _AdminPageState extends State<AdminPage> {
                   itemBuilder: (context, index) {
                     var user = users[index];
                     var userData = user.data() as Map<String, dynamic>;
+                    var userId = user.id;
 
                     return ListTile(
                       title: Text(userData['email'] ?? 'No email'),
                       subtitle: Text(userData['name'] ?? 'No name'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () {
-                              _emailController.text = userData['email'] ?? '';
-                              _nameController.text = userData['name'] ?? '';
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('Edit User'),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      TextField(
-                                        controller: _emailController,
-                                        decoration:
-                                            InputDecoration(labelText: 'Email'),
-                                      ),
-                                      TextField(
-                                        controller: _nameController,
-                                        decoration:
-                                            InputDecoration(labelText: 'Name'),
-                                      ),
-                                      TextField(
-                                        controller: _passwordController,
-                                        decoration: InputDecoration(
-                                            labelText: 'Password'),
-                                        obscureText: true,
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        updateUser(
-                                            user.id,
-                                            _emailController.text,
-                                            _nameController.text,
-                                            _passwordController.text);
-                                        Navigator.of(context).pop();
-                                        _emailController.clear();
-                                        _passwordController.clear();
-                                        _nameController.clear();
-                                      },
-                                      child: Text('Save'),
-                                    ),
-                                  ],
+                      trailing: IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          _nameController.text = userData['name'] ?? '';
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Edit User Name'),
+                              content: TextField(
+                                controller: _nameController,
+                                decoration: InputDecoration(labelText: 'Name'),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    updateUser(userId, _nameController.text);
+                                    Navigator.of(context).pop();
+                                    _nameController.clear();
+                                  },
+                                  child: Text('Save'),
                                 ),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              deleteUser(user.id);
-                            },
-                          ),
-                        ],
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     );
                   },

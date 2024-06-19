@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shopper/pallete.dart';
 import 'package:shopper/widgets/gradient_button.dart';
@@ -19,16 +20,32 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String _email = '';
   String _password = '';
+  bool _passwordVisible = false; // Zmienna do kontrolowania widoczności hasła
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-        await _auth.signInWithEmailAndPassword(
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _email,
           password: _password,
         );
-        Navigator.pushReplacementNamed(context, '/home');
+        User? user = userCredential.user;
+
+        if (user != null) {
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+          if (userDoc.exists) {
+            String role = userDoc['role'];
+            if (role == 'admin') {
+              Navigator.pushReplacementNamed(context, '/admin');
+            } else {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          }
+        }
       } catch (e) {
         debugPrint(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 15),
                     LoginField(
                       hintText: 'Password',
-                      obscureText: true,
+                      obscureText: !_passwordVisible,
                       onSaved: (value) {
                         _password = value!;
                       },
@@ -129,6 +146,18 @@ class _LoginPageState extends State<LoginPage> {
                         }
                         return null;
                       },
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                     ),
                     const SizedBox(height: 20),
                     GradientButton(

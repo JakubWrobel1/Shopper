@@ -7,6 +7,7 @@ class LoginField extends StatefulWidget {
   final TextInputType keyboardType;
   final FormFieldSetter<String>? onSaved;
   final FormFieldValidator<String>? validator;
+  final Widget? suffixIcon; // Dodanie tego parametru
 
   const LoginField({
     Key? key,
@@ -15,6 +16,7 @@ class LoginField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.onSaved,
     this.validator,
+    this.suffixIcon,
   }) : super(key: key);
 
   @override
@@ -70,6 +72,7 @@ class _LoginFieldState extends State<LoginField> {
                 color: hasError ? Colors.red : Colors.grey,
               ),
               errorStyle: const TextStyle(height: 0), // Hide error text
+              suffixIcon: widget.suffixIcon, // Dodanie ikony suffix
             ),
             obscureText: widget.obscureText,
             keyboardType: widget.keyboardType,
