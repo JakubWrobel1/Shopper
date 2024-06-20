@@ -40,7 +40,7 @@ class _AccountPageState extends State<AccountPage> {
           .doc(user!.uid)
           .update({'name': _nameController.text});
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Name updated successfully')),
+        const SnackBar(content: Text('Name updated successfully')),
       );
     }
   }
@@ -60,10 +60,10 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Account Settings'),
+        title: const Text('Account Settings'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             onPressed: () async {
               await _auth.signOut();
               Navigator.pushReplacementNamed(context, '/login');
@@ -77,18 +77,31 @@ class _AccountPageState extends State<AccountPage> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+              decoration: const InputDecoration(labelText: 'Name'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _updateUserName,
-              child: Text('Update Name'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                minimumSize: const Size(160, 50),
+              ),
+              child: const Text(
+                'Update Name',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 50),
             ElevatedButton(
               onPressed: _deleteAccount,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('Delete Account'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: const Size(160, 50),
+              ),
+              child: const Text(
+                'Delete Account',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
