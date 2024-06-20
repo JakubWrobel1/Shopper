@@ -52,6 +52,34 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text(
+              'Are you sure you want to delete your account? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteAccount();
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _deleteAccount() async {
     if (user != null) {
       await FirebaseFirestore.instance
@@ -100,7 +128,7 @@ class _AccountPageState extends State<AccountPage> {
             ),
             const SizedBox(height: 50),
             ElevatedButton(
-              onPressed: _deleteAccount,
+              onPressed: _confirmDeleteAccount,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 minimumSize: const Size(160, 50),

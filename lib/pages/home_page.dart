@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/gradient_floating_action_button.dart';
 import 'shopping_list_pages/shopping_list_functions/edit_shopping_list_dialog.dart';
-import 'shopping_list_pages/shopping_list_functions/delete_shopping_list_function.dart';
 import 'shopping_list_pages/shopping_list_functions/create_shopping_list_function.dart';
 import 'shopping_list_items/item_list_page.dart';
 

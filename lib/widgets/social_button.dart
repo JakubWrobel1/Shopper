@@ -19,7 +19,7 @@ class SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: double.infinity,
+      width: 400,
       child: TextButton.icon(
         onPressed: onPressed, // Wywołanie przekazanej funkcji onPressed
         icon: SvgPicture.asset(

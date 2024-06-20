@@ -5,6 +5,7 @@ import 'package:shopper/pages/home_page.dart';
 import '../../pallete.dart';
 
 class AdminPage extends StatefulWidget {
+  const AdminPage({super.key});
   @override
   _AdminPageState createState() => _AdminPageState();
 }
@@ -44,7 +45,7 @@ class _AdminPageState extends State<AdminPage> {
 
         setState(() {});
       } catch (e) {
-        print("Error: $e");
+        debugPrint("Error: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to register user: $e')),
         );
@@ -73,13 +74,13 @@ class _AdminPageState extends State<AdminPage> {
 
         setState(() {});
       } catch (e) {
-        print("Error: $e");
+        debugPrint("Error: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update user: $e')),
         );
       }
     } else {
-      print("Admin user is not logged in.");
+      debugPrint("Admin user is not logged in.");
     }
   }
 
@@ -97,11 +98,10 @@ class _AdminPageState extends State<AdminPage> {
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Name',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      errorStyle:
-                          const TextStyle(height: 0), // Hide error text below
+                      errorStyle: TextStyle(height: 0), // Hide error text below
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
                         borderSide: BorderSide(
@@ -127,11 +127,10 @@ class _AdminPageState extends State<AdminPage> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _emailController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Email',
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      errorStyle:
-                          const TextStyle(height: 0), // Hide error text below
+                      errorStyle: TextStyle(height: 0), // Hide error text below
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
                         borderSide: BorderSide(
@@ -180,14 +179,14 @@ class _AdminPageState extends State<AdminPage> {
                       ),
                       errorStyle:
                           const TextStyle(height: 0), // Hide error text below
-                      errorBorder: OutlineInputBorder(
+                      errorBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
                         borderSide: BorderSide(
                           color: Colors.red,
                           width: 2.0,
                         ),
                       ),
-                      focusedErrorBorder: OutlineInputBorder(
+                      focusedErrorBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
                         borderSide: BorderSide(
                           color: Colors.red,
@@ -295,7 +294,7 @@ class _AdminPageState extends State<AdminPage> {
           key: _formKey,
           child: TextFormField(
             controller: _nameController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Name',
               floatingLabelBehavior: FloatingLabelBehavior.never,
               filled: true,
@@ -321,7 +320,7 @@ class _AdminPageState extends State<AdminPage> {
                   width: 2.0,
                 ),
               ),
-              errorStyle: const TextStyle(height: 0), // Hide error text below
+              errorStyle: TextStyle(height: 0), // Hide error text below
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8.0)),
                 borderSide: BorderSide(
@@ -387,12 +386,12 @@ class _AdminPageState extends State<AdminPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Panel'),
+        title: const Text('Admin Panel'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => HomePage()),
+              MaterialPageRoute(builder: (context) => const HomePage()),
             );
           },
         ),
