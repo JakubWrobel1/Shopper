@@ -13,24 +13,39 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _listNameController = TextEditingController();
   final TextEditingController _listDescriptionController =
       TextEditingController();
   User? user;
   String userRole = 'user'; // Default role
+  String userName = ''; // User name
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     user = _auth.currentUser;
     if (user != null) {
-      _fetchUserRole();
+      _fetchUserDetails();
     }
   }
 
-  Future<void> _fetchUserRole() async {
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchUserDetails();
+    }
+  }
+
+  Future<void> _fetchUserDetails() async {
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user!.uid)
@@ -38,6 +53,7 @@ class _HomePageState extends State<HomePage> {
     if (userDoc.exists) {
       setState(() {
         userRole = userDoc['role'] ?? 'user';
+        userName = userDoc['name'] ?? 'User';
       });
     }
   }
@@ -46,13 +62,24 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your shopping lists'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Hello, $userName'),
+            const Text(
+              'Your shopping lists',
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (String result) {
               switch (result) {
                 case 'account':
-                  Navigator.pushNamed(context, '/account');
+                  Navigator.pushNamed(context, '/account').then((_) {
+                    _fetchUserDetails();
+                  });
                   break;
                 case 'admin':
                   if (userRole == 'admin') {

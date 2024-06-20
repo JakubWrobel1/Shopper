@@ -110,6 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   );
                 },
               ),
+              const SizedBox(height: 15),
               const Text(
                 'or',
                 style: TextStyle(

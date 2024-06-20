@@ -75,16 +75,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 25),
               SocialButton(
-                  iconPath: 'assets/svgs/g_logo.svg',
-                  label: 'Continue with Google',
-                  onPressed: () {
-                    loginWithGoogle(
-                      auth: _auth,
-                      context: context,
-                      googleSignIn: _googleSignIn,
-                    );
-                  } // Przekaż funkcję logowania przez Google
-                  ),
+                iconPath: 'assets/svgs/g_logo.svg',
+                label: 'Continue with Google',
+                onPressed: () {
+                  loginWithGoogle(
+                    auth: _auth,
+                    context: context,
+                    googleSignIn: _googleSignIn,
+                  );
+                },
+              ),
               const SizedBox(height: 15),
               const Text(
                 'or',
