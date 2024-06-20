@@ -23,7 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String _email = '';
   String _password = '';
   String _name = '';
-  bool _passwordVisible = false; // Zmienna do kontrolowania widoczności hasła
+  bool _passwordVisible = false;
 
   void _register() async {
     if (_formKey.currentState!.validate()) {
@@ -38,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': _email,
           'name': _name,
-          'role': 'user', // Domyślna rola
+          'role': 'user',
           'createdAt': FieldValue.serverTimestamp(),
         });
 
@@ -108,7 +108,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     context: context,
                     googleSignIn: _googleSignIn,
                   );
-                }, // Przekaż funkcję logowania przez Google
+                },
               ),
               const Text(
                 'or',
@@ -144,6 +144,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
                         }
+                        Pattern pattern =
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+                        RegExp regex = RegExp(pattern as String);
+                        if (!regex.hasMatch(value)) {
+                          return 'Please enter a valid email address';
+                        }
                         return null;
                       },
                     ),
@@ -155,7 +161,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         _password = value!;
                       },
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.length < 6) {
                           return 'Please enter your password';
                         }
                         return null;

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -23,6 +24,16 @@ Future<void> loginWithGoogle({
         await auth.signInWithCredential(credential);
 
     if (userCredential.user != null) {
+      User? user = userCredential.user;
+
+      DocumentReference userRef =
+          FirebaseFirestore.instance.collection('users').doc(user!.uid);
+      userRef.get().then((doc) {
+        if (!doc.exists) {
+          userRef.set({'name': 'User', 'email': user.email, 'role': 'user'});
+        }
+      });
+
       Navigator.pushReplacementNamed(context, '/home');
     }
   } catch (e) {

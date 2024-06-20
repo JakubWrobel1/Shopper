@@ -6,6 +6,7 @@ import 'pages/home_page.dart';
 import 'pages/login_register_pages/register_page.dart';
 import './pallete.dart';
 import './pages/admin_pages/admin_page.dart';
+import './pages/account_page/account_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
         '/register': (context) => const RegisterPage(),
         '/admin': (context) => AdminPage(),
+        '/account': (context) => const AccountPage(),
       },
     );
   }
