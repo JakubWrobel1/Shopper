@@ -19,27 +19,70 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _listNameController = TextEditingController();
   final TextEditingController _listDescriptionController =
       TextEditingController();
+  User? user;
+  String userRole = 'user'; // Default role
+
+  @override
+  void initState() {
+    super.initState();
+    user = _auth.currentUser;
+    if (user != null) {
+      _fetchUserRole();
+    }
+  }
+
+  Future<void> _fetchUserRole() async {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
+    if (userDoc.exists) {
+      setState(() {
+        userRole = userDoc['role'] ?? 'user';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    User? user = _auth.currentUser;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your shopping lists'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.pushNamed(context, '/account');
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              switch (result) {
+                case 'account':
+                  Navigator.pushNamed(context, '/account');
+                  break;
+                case 'admin':
+                  if (userRole == 'admin') {
+                    Navigator.pushNamed(context, '/admin');
+                  }
+                  break;
+                case 'logout':
+                  _auth.signOut().then((_) {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  });
+                  break;
+              }
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _auth.signOut();
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'account',
+                child: Text('Account'),
+              ),
+              if (userRole == 'admin')
+                const PopupMenuItem<String>(
+                  value: 'admin',
+                  child: Text('Admin Panel'),
+                ),
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Text('Logout'),
+              ),
+            ],
+            icon: const Icon(Icons.menu), // Menu icon
           ),
         ],
       ),
@@ -49,7 +92,7 @@ class _HomePageState extends State<HomePage> {
           : StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('shopping_lists')
-                  .doc(user.uid)
+                  .doc(user!.uid)
                   .collection('user_lists')
                   .snapshots(),
               builder: (context, snapshot) {
@@ -87,32 +130,26 @@ class _HomePageState extends State<HomePage> {
                         subtitle: listDescription.isNotEmpty
                             ? Text(listDescription)
                             : null,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                editShoppingList(
-                                  context: context,
-                                  auth: _auth,
-                                  listNameController: _listNameController,
-                                  listDescriptionController:
-                                      _listDescriptionController,
-                                  listId: listId,
-                                  currentName: listName,
-                                  currentDescription: listDescription,
-                                );
-                              },
-                            ),
-                          ],
+                        trailing: IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            editShoppingList(
+                              context: context,
+                              auth: _auth,
+                              listNameController: _listNameController,
+                              listDescriptionController:
+                                  _listDescriptionController,
+                              listId: listId,
+                              currentName: listName,
+                              currentDescription: listDescription,
+                            );
+                          },
                         ),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ShoppingListPage(listId),
-                            ),
+                                builder: (context) => ShoppingListPage(listId)),
                           );
                         },
                       ),

@@ -34,6 +34,13 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   void _updateUserName() async {
+    if (_nameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name cannot be empty')),
+      );
+      return;
+    }
+
     if (user != null) {
       await FirebaseFirestore.instance
           .collection('users')

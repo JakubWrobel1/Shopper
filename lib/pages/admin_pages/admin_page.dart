@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shopper/pages/home_page.dart';
 import '../../pallete.dart';
 
 class AdminPage extends StatefulWidget {
@@ -44,16 +45,25 @@ class _AdminPageState extends State<AdminPage> {
         setState(() {});
       } catch (e) {
         print("Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to register user: $e')),
+        );
       }
     }
   }
 
   void updateUser(String userId, String name) async {
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name cannot be empty')),
+      );
+      return;
+    }
+
     User? adminUser = _auth.currentUser;
 
     if (adminUser != null) {
       try {
-        // Aktualizacja danych użytkownika w Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userId)
@@ -64,6 +74,9 @@ class _AdminPageState extends State<AdminPage> {
         setState(() {});
       } catch (e) {
         print("Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update user: $e')),
+        );
       }
     } else {
       print("Admin user is not logged in.");
@@ -76,77 +89,149 @@ class _AdminPageState extends State<AdminPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Register New User'),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a name';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an email';
-                    }
-                    Pattern pattern =
-                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-                    RegExp regex = RegExp(pattern as String);
-                    if (!regex.hasMatch(value)) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _passwordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+          content: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      errorStyle:
+                          const TextStyle(height: 0), // Hide error text below
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _passwordVisible = !_passwordVisible;
-                        });
-                      },
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
+                      ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a name'; // The error message will be shown inside the input field
+                      }
+                      return null;
+                    },
                   ),
-                  obscureText: !_passwordVisible,
-                  validator: (value) {
-                    if (value == null || value.isEmpty || value.length < 6) {
-                      return 'Please enter a password with at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                DropdownButton<String>(
-                  value: _role,
-                  items: <String>['user', 'admin'].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _role = newValue!;
-                    });
-                  },
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      errorStyle:
+                          const TextStyle(height: 0), // Hide error text below
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an email';
+                      }
+                      Pattern pattern =
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+                      RegExp regex = RegExp(pattern as String);
+                      if (!regex.hasMatch(value)) {
+                        return 'Please enter a valid email address';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
+                      errorStyle:
+                          const TextStyle(height: 0), // Hide error text below
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    obscureText: !_passwordVisible,
+                    validator: (value) {
+                      if (value == null || value.isEmpty || value.length < 6) {
+                        return 'Please enter a password with at least 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _role,
+                    decoration: const InputDecoration(
+                      labelText: 'Role',
+                      filled: true,
+                      fillColor: Color.fromRGBO(35, 35, 49, 0.8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        borderSide: BorderSide(
+                          color: Color.fromRGBO(52, 51, 67, 1),
+                          width: 2.0,
+                        ),
+                      ),
+                    ),
+                    items: <String>['user', 'admin'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _role = newValue!;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -155,6 +240,8 @@ class _AdminPageState extends State<AdminPage> {
                 Navigator.of(context).pop();
               },
               style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 side: const BorderSide(color: Colors.grey),
                 backgroundColor: Colors.grey.withOpacity(0.1),
               ),
@@ -176,12 +263,14 @@ class _AdminPageState extends State<AdminPage> {
                   _passwordController.clear();
                   _nameController.clear();
                   setState(() {
-                    _role = 'user'; // Reset role to default
+                    _role = 'user';
                   });
                   Navigator.of(context).pop();
                 }
               },
               style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 backgroundColor: Colors.blue,
               ),
               child: const Text(
@@ -190,9 +279,107 @@ class _AdminPageState extends State<AdminPage> {
               ),
             ),
           ],
-          actionsAlignment: MainAxisAlignment.center,
+          actionsAlignment: MainAxisAlignment.spaceBetween,
         );
       },
+    );
+  }
+
+  void _showEditUserDialog(String userId, String currentName) {
+    _nameController.text = currentName;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit User Name'),
+        content: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: 'Name',
+              floatingLabelBehavior: FloatingLabelBehavior.never,
+              filled: true,
+              fillColor: Color.fromRGBO(35, 35, 49, 0.8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                borderSide: BorderSide(
+                  color: Color.fromRGBO(52, 51, 67, 1),
+                  width: 2.0,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                borderSide: BorderSide(
+                  color: Color.fromRGBO(52, 51, 67, 1),
+                  width: 2.0,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                borderSide: BorderSide(
+                  color: Pallete.gradient2,
+                  width: 2.0,
+                ),
+              ),
+              errorStyle: const TextStyle(height: 0), // Hide error text below
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                borderSide: BorderSide(
+                  color: Colors.red,
+                  width: 2.0,
+                ),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                borderSide: BorderSide(
+                  color: Colors.red,
+                  width: 2.0,
+                ),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a name'; // The error message will be shown inside the input field
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              side: const BorderSide(color: Colors.grey),
+              backgroundColor: Colors.grey.withOpacity(0.1),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                updateUser(userId, _nameController.text);
+                Navigator.of(context).pop();
+                _nameController.clear();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              backgroundColor: Colors.blue,
+            ),
+            child: const Text(
+              'Save',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+      ),
     );
   }
 
@@ -201,6 +388,14 @@ class _AdminPageState extends State<AdminPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Admin Panel'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -259,79 +454,8 @@ class _AdminPageState extends State<AdminPage> {
                           trailing: IconButton(
                             icon: const Icon(Icons.edit),
                             onPressed: () {
-                              _nameController.text = userData['name'] ?? '';
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Edit User Name'),
-                                  content: TextField(
-                                    controller: _nameController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Name',
-                                      filled: true,
-                                      fillColor:
-                                          Color.fromRGBO(35, 35, 49, 0.8),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(8.0)),
-                                        borderSide: BorderSide(
-                                          color: Color.fromRGBO(52, 51, 67, 1),
-                                          width: 2.0,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(8.0)),
-                                        borderSide: BorderSide(
-                                          color: Color.fromRGBO(52, 51, 67, 1),
-                                          width: 2.0,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(8.0)),
-                                        borderSide: BorderSide(
-                                          color: Pallete.gradient2,
-                                          width: 2.0,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    OutlinedButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      style: OutlinedButton.styleFrom(
-                                        side: const BorderSide(
-                                            color: Colors.grey),
-                                        backgroundColor:
-                                            Colors.grey.withOpacity(0.1),
-                                      ),
-                                      child: const Text(
-                                        'Cancel',
-                                        style: TextStyle(color: Colors.white70),
-                                      ),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        updateUser(
-                                            userId, _nameController.text);
-                                        Navigator.of(context).pop();
-                                        _nameController.clear();
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                      ),
-                                      child: const Text(
-                                        'Save',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  actionsAlignment: MainAxisAlignment.center,
-                                ),
-                              );
+                              _showEditUserDialog(
+                                  userId, userData['name'] ?? '');
                             },
                           ),
                         ),
